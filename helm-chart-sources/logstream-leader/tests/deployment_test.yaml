@@ -76,3 +76,21 @@ tests:
             - name: foo
               containerPort: 420
               protocol: UDP
+
+  - it: Should include CRIBL_K8S_POD and CRIBL_K8S_CPU_LIMIT from downward API
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[3].name
+          value: CRIBL_K8S_POD
+      - equal:
+          path: spec.template.spec.containers[0].env[3].valueFrom.fieldRef.fieldPath
+          value: metadata.name
+      - equal:
+          path: spec.template.spec.containers[0].env[4].name
+          value: CRIBL_K8S_CPU_LIMIT
+      - equal:
+          path: spec.template.spec.containers[0].env[4].valueFrom.resourceFieldRef.resource
+          value: limits.cpu
+      - equal:
+          path: spec.template.spec.containers[0].env[4].valueFrom.resourceFieldRef.divisor
+          value: "1m"
