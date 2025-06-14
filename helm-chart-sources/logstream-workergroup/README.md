@@ -8,7 +8,7 @@ This chart deploys a Cribl Stream worker group.
 Versions starting with 3.4.0 include a change to the syntax for RBAC values. Before you upgrade the chart from pre-3.4.0 versions, please see the [table below](#values) for current options for the `rbac.apiGroups`, `rbac.verbs`, and `rbac.resources` values.
 
 # New Capabilities
-* Support for the 4.10.1 version of Cribl Stream (default version)
+* Support for the 4.12.1 version of Cribl Stream (default version)
 
 # Deployment
 
@@ -34,6 +34,7 @@ This section covers the most likely values to override. To see the full scope of
 |config.tag|deprecated|This option is deprecated, but still supported for backward compatibility. |
 |config.token|"criblleader"|The authentication token for your Cribl Stream leader. |
 |config.host|"logstream-leader"|The resolvable hostname of your Cribl Stream leader. |
+|config.port|4200|The TCP port where your Cribl Stream leader listens. |
 |config.useExistingSecret|`false`|Setting this value to `true` disables the creation of a `CRIBL_DIST_MASTER_URL` string. You are responsible for attaching it using the `envValueFrom` config. See below for an example.|
 |config.rejectSelfSignedCerts|0| One of: `0` – allow self-signed certs; or `1` – deny self-signed certs. |
 |config.tlsLeader.enable|false|Enable TLS connectivity from the workergroup to its leader node |
@@ -51,6 +52,7 @@ This section covers the most likely values to override. To see the full scope of
 |ingress|see `values.yaml`|Ingress controller configuration|
 |ingress.enable|false|Enable creating Ingress resources|
 |criblImage.tag|"3.4.0"|The container image tag to pull from. By default, this will use the version equivalent to the chart's `appVersion` value. But you can override this with "latest" to get the latest release, or with a version number (e.g., "3.4.0") to pull a specific version of Cribl Stream. |
+|criblImage.wolfiImage|false|Cribl publishes 2 versions of the container, the default based on Ubuntu and the alternative version based on Wolfi.  This setting should only be enabled if you want to use Cribl's published Wolfi container image.|
 |autoscaling.minReplicas|2|The minimum number of Cribl Stream pods to run.|
 |autoscaling.maxReplicas|10|The maximum number of Cribl Stream pods to scale to run.|
 |autoscaling.targetCPUUtilizationPercentage|50|The CPU utilization percentage that triggers scaling. |
@@ -75,6 +77,8 @@ This section covers the most likely values to override. To see the full scope of
 |[envValueFrom](../../common_docs/EXTRA_EXAMPLES.md#extraEnvFrom)|See `values.yaml`|Environment variables to be exposed from the Downward API.|
 |[env](../../common_docs/EXTRA_EXAMPLES.md#env)|[]|Additional Static Environment Variables.|
 |deployment|deployment|One of: "deployment" to deploy as a Deployment Set; or "daemonset" to deploy as a DaemonSet.|
+|podAnnotations|{}|Additional annotations for the pods|
+|includeSecretConfigAnnotation|false|Add an annotation to the deployment pods that will automatically restart the pods anytime there is a change to the secret for the logstream configuration.|
 |[rbac.extraRules](../../common_docs/EXTRA_EXAMPLES.md#rbac.extraRules)|{}|Additional RBAC rules to put in place.|
 
 ### A Note About Versioning
