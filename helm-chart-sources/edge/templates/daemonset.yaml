@@ -43,7 +43,7 @@ spec:
       {{- with .Values.tolerations }}
       tolerations: {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or .Values.extraVolumeMounts .Values.extraConfigmapMounts .Values.extraSecretMounts }}
+      {{- if or .Values.extraVolumeMounts .Values.extraConfigMaps .Values.extraSecretMounts }}
       volumes:
         {{- range .Values.extraVolumeMounts }}
         - name: {{ .name }}

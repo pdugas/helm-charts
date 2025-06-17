@@ -1,0 +1,596 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: Deployment
+templates:
+  - deployment.yaml
+chart:
+  version: 1.2.3
+  appVersion: 2.3.4
+tests:
+  - it: core
+    asserts:
+      - isAPIVersion:
+          of: apps/v1
+      - isKind:
+          of: Deployment
+
+  - it: metadata
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-outpost
+      - equal:
+          path: spec.replicas
+          value: 1
+      - isSubset:
+          path: metadata.labels
+          content:
+            "app.kubernetes.io/instance": "RELEASE-NAME"
+            "app.kubernetes.io/managed-by": "Helm"
+            "app.kubernetes.io/name": "outpost"
+            "app.kubernetes.io/version": "2.3.4"
+            "helm.sh/chart": "outpost-1.2.3"
+
+  - it: spec.replicas
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+
+  - it: spec.selector
+    asserts:
+      - isSubset:
+          path: spec.selector
+          content:
+            matchLabels:
+              "app.kubernetes.io/instance": "RELEASE-NAME"
+              "app.kubernetes.io/name": "outpost"
+
+  - it: spec.strategy
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: Recreate
+  - it: spec.template.metadata
+    asserts:
+      - isSubset:
+          path: spec.template.metadata
+          content:
+            labels:
+              "app.kubernetes.io/instance": "RELEASE-NAME"
+              "app.kubernetes.io/name": "outpost"
+
+  - it: spec.template.metadata.labels
+    asserts:
+      - isSubset:
+          path: spec.template.metadata.labels
+          content:
+            "app.kubernetes.io/instance": "RELEASE-NAME"
+            "app.kubernetes.io/name": "outpost"
+
+  - it: spec.template.spec.serviceAccountName
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-outpost
+  - it: spec.template.spec.serviceAccountName (override with serviceAccount.name)
+    set:
+      serviceAccount:
+        name: foo-outpost
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: foo-outpost
+  - it: spec.template.spec.serviceAccountName (omitted with serviceAccount.automountServiceAccountToken set false)
+    set:
+      serviceAccount:
+        automountServiceAccountToken: false
+    asserts:
+      - notExists:
+          path: spec.template.spec.serviceAccountName
+
+  - it: spec.template.spec.containers
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1
+
+  - it: spec.template.spec.containers[0] name
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: outpost
+
+  - it: spec.template.spec.containers[0] image and imagePullPolicy (default)
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: cribl/cribl:2.3.4
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: IfNotPresent
+  - it: spec.template.spec.containers[0] image and imagePullPolicy can be overridden
+    set:
+      image:
+        repository: foo/bar
+        tag: 42.0.0
+        pullPolicy: Always
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: foo/bar:42.0.0
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+
+  - it: spec.template.spec.containers[0] readinessProbe (default)
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /api/v1/health
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: 4200
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.scheme
+          value: HTTP
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
+          value: 15
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.timeoutSeconds
+          value: 1
+  - it: spec.template.spec.containers[0] readinessProbe (override with cribl.readinessProbe)
+    set:
+      cribl:
+        readinessProbe:
+          httpGet:
+            path: /api/v1/health2
+            port: 4201
+            scheme: HTTPS
+          initialDelaySeconds: 10
+          timeoutSeconds: 2
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /api/v1/health2
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: 4201
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.scheme
+          value: HTTPS
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.timeoutSeconds
+          value: 2
+
+  - it: spec.template.spec.containers[0] livenessProbe (default)
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /api/v1/health
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.port
+          value: 4200
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.scheme
+          value: HTTP
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 15
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.timeoutSeconds
+          value: 1
+  - it: spec.template.spec.containers[0] livenessProbe (override with cribl.livenessProbe)
+    set:
+      cribl:
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health2
+            port: 4201
+            scheme: HTTPS
+          initialDelaySeconds: 10
+          timeoutSeconds: 2
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /api/v1/health2
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.port
+          value: 4201
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.scheme
+          value: HTTPS
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.timeoutSeconds
+          value: 2
+
+  - it: spec.template.spec.containers[0] env (CRIBL_DIST_LEADER_URL)
+    asserts:
+      - exists:
+          path: spec.template.spec.containers[0].env[?(@.name == 'CRIBL_DIST_LEADER_URL')]
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name == 'CRIBL_DIST_LEADER_URL')].valueFrom.secretKeyRef.name
+          value: RELEASE-NAME-outpost-cribl-settings
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name == 'CRIBL_DIST_LEADER_URL')].valueFrom.secretKeyRef.key
+          value: CRIBL_DIST_LEADER_URL
+
+  - it: spec.template.spec.containers[0] env (CRIBL_HOME)
+    asserts:
+      - exists:
+          path: spec.template.spec.containers[0].env[?(@.name == 'CRIBL_HOME')]
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name == 'CRIBL_HOME')].value
+          value: /opt/cribl
+  - it: spec.template.spec.containers[0] env (CRIBL_HOME can be overridden)
+    set:
+      cribl:
+        home: /opt/cribl2
+    asserts:
+      - exists:
+          path: spec.template.spec.containers[0].env[?(@.name == 'CRIBL_HOME')]
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name == 'CRIBL_HOME')].value
+          value: /opt/cribl2
+
+  - it: spec.template.spec.containers[0] env (CRIBL_K8S_POD)
+    asserts:
+      - exists:
+          path: spec.template.spec.containers[0].env[?(@.name == 'CRIBL_K8S_POD')]
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name == 'CRIBL_K8S_POD')].valueFrom.fieldRef.fieldPath
+          value: metadata.name
+
+  - it: spec.template.spec.containers[0] env (CRIBL_K8S_CPU_LIMIT)
+    asserts:
+      - exists:
+          path: spec.template.spec.containers[0].env[?(@.name == 'CRIBL_K8S_CPU_LIMIT')]
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name == 'CRIBL_K8S_CPU_LIMIT')].valueFrom.resourceFieldRef.resource
+          value: limits.cpu
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name == 'CRIBL_K8S_CPU_LIMIT')].valueFrom.resourceFieldRef.divisor
+          value: 1m
+
+  - it: spec.template.spec.containers[0] env (CRIBL_DIST_MODE)
+    asserts:
+      - exists:
+          path: spec.template.spec.containers[0].env[?(@.name == 'CRIBL_DIST_MODE')]
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name == 'CRIBL_DIST_MODE')].value
+          value: outpost
+
+
+  - it: spec.template.spec.containers[0].ports (default)
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers[0].ports
+          count: 1
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: dist-mgmt
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 4200
+  - it: spec.template.spec.containers[0].ports (override with cribl.ports)
+    set:
+      service:
+        ports:
+          - name: http
+            port: 4201
+          - name: another
+            port: 4202
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers[0].ports
+          count: 2
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: http
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 4201
+      - equal:
+          path: spec.template.spec.containers[0].ports[1].name
+          value: another
+      - equal:
+          path: spec.template.spec.containers[0].ports[1].containerPort
+          value: 4202
+
+  - it: doesn't set a default priorityClassName
+    asserts:
+      - notExists:
+          path: spec.template.spec.priorityClassName
+  - it: supports setting a priorityClassName
+    set:
+      priorityClassName: gotta-goat-fast
+    asserts:
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: gotta-goat-fast
+
+  - it: spec.template.spec.containers[0].resources (default)
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 2
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: 4096Mi
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 4
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 8192Mi
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.ephemeral-storage
+          value: 10Gi
+
+  - it: imagePullSecrets (default)
+    asserts:
+      - notExists:
+          path: spec.template.spec.imagePullSecrets
+  - it: imagePullSecrets (override with imagePullSecrets)
+    set:
+      imagePullSecrets:
+        - name: foo
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.imagePullSecrets
+          count: 1
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: foo
+
+  - it: extraInitContainers (default)
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers
+  - it: extraInitContainers (override with extraInitContainers)
+    set:
+      extraInitContainers:
+        - name: foo
+          env:
+            - name: FOO
+              value: BAR
+          volumeMounts:
+            - name: foo
+              mountPath: /foo
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.initContainers
+          count: 1
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: foo
+      - equal:
+          path: spec.template.spec.initContainers[0].env[0].name
+          value: FOO
+      - equal:
+          path: spec.template.spec.initContainers[0].env[0].value
+          value: BAR
+      - lengthEqual:
+          path: spec.template.spec.initContainers[0].volumeMounts
+          count: 1
+      - equal:
+          path: spec.template.spec.initContainers[0].volumeMounts[0].name
+          value: foo
+      - equal:
+          path: spec.template.spec.initContainers[0].volumeMounts[0].mountPath
+          value: /foo
+
+  - it: nodeSelector (default)
+    asserts:
+      - notExists:
+          path: spec.template.spec.nodeSelector
+  - it: nodeSelector (override with nodeSelector)
+    set:
+      nodeSelector:
+        foo: bar
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            foo: bar
+
+  - it: tolerations (default)
+    asserts:
+      - notExists:
+          path: spec.template.spec.tolerations
+  - it: tolerations (override with tolerations)
+    set:
+      tolerations:
+        - key: foo
+          operator: Exists
+          effect: NoSchedule
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.tolerations
+          count: 1
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: foo
+      - equal:
+          path: spec.template.spec.tolerations[0].operator
+          value: Exists
+      - equal:
+          path: spec.template.spec.tolerations[0].effect
+          value: NoSchedule
+
+  - it: volumes (default)
+    asserts:
+      - notExists:
+          path: spec.template.spec.volumes
+      - notExists:
+          path: spec.template.spec.containers[0].volumeMounts
+  - it: volumes (add with extraVolumeMounts)
+    set:
+      extraVolumeMounts:
+        - name: foo
+          existingClaim: foo-claim
+          readOnly: false
+          subPath: sub-path
+          subPathExpr: sub-expr
+          mountPath: /foo
+        - name: bar
+          hostPath: /bar
+          readOnly: true
+          subPathExpr: sub-expr
+          mountPath: /bar
+        - name: baz
+          mountPath: /baz
+          readOnly: true
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.volumes
+          count: 3
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: foo
+      - equal:
+          path: spec.template.spec.volumes[0].persistentVolumeClaim.claimName
+          value: foo-claim
+      - equal:
+          path: spec.template.spec.volumes[1].name
+          value: bar
+      - equal:
+          path: spec.template.spec.volumes[1].hostPath.path
+          value: /bar
+      - equal:
+          path: spec.template.spec.volumes[2].name
+          value: baz
+      - lengthEqual:
+          path: spec.template.spec.containers[0].volumeMounts
+          count: 3
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: foo
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: /foo
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].readOnly
+          value: false
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].subPath
+          value: sub-path
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].subPathExpr
+          value: sub-expr
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].name
+          value: bar
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].mountPath
+          value: /bar
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].readOnly
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].subPath
+          value: 
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].subPathExpr
+          value: sub-expr
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[2].name
+          value: baz
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[2].mountPath
+          value: /baz
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[2].readOnly
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[2].subPath
+          value:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[2].subPathExpr
+          value:
+  - it: volumes (add with extraConfigMaps)
+    set:
+      extraConfigMaps:
+        - name: foo
+          configMap: foo-map
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.volumes
+          count: 1
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: foo
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: foo-map
+  - it: volumes (add with extraSecretMounts)
+    set:
+      extraSecretMounts:
+        - name: foo
+          secretName: foo-secret
+          defaultMode: foo-mode
+        - name: bar
+          projected:
+            something: clever
+        - name: baz
+          csi:
+            something: contrived
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.volumes
+          count: 3
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: foo
+      - equal:
+          path: spec.template.spec.volumes[0].secret.secretName
+          value: foo-secret
+      - equal:
+          path: spec.template.spec.volumes[0].secret.defaultMode
+          value: foo-mode
+      - equal:
+          path: spec.template.spec.volumes[1].name
+          value: bar
+      - equal:
+          path: spec.template.spec.volumes[1].projected.something
+          value: clever
+      - equal:
+          path: spec.template.spec.volumes[2].name
+          value: baz
+      - equal:
+          path: spec.template.spec.volumes[2].csi.something
+          value: contrived
+
+  - it: terminationGracePeriodSeconds (default)
+    asserts:
+      - notExists:
+          path: spec.template.spec.terminationGracePeriodSeconds
+  - it: terminationGracePeriodSeconds (override with terminationGracePeriodSeconds)
+    set:
+      terminationGracePeriodSeconds: 10
+    asserts:
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 10
+
+  - it: extraContainers
+    set:
+      extraContainers:
+        - name: foo
+          image: foo/bar:42.0.0
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 2
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: foo
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: foo/bar:42.0.0

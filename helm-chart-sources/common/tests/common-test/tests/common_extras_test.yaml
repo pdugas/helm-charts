@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: common.extras
+templates:
+  - extras.yaml
+set:
+  extraObjects:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: foo
+        labels:
+          app.kubernetes.io/name: foo
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: bar
+        labels:
+          app.kubernetes.io/name: bar
+tests:
+  - it: includes the extraObjects
+    asserts:
+      - hasDocuments:
+          count: 2
+  - it: includes the first extraObject
+    documentIndex: 0
+    asserts:
+      - isAPIVersion:
+          of: v1
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: foo
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: foo
+  - it: includes the second extraObject
+    documentIndex: 1
+    asserts:
+      - isAPIVersion:
+          of: v1
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: bar
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: bar

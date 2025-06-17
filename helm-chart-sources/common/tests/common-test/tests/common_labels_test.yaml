@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: common.labels
+templates:
+  - helpers.yaml
+tests:
+  - it: has defaults
+    release:
+      name: foo
+      version: 1.2.3
+    chart:
+      name: bar
+      version: 2.3.4
+      appVersion: 3.4.5
+    asserts:
+      - equal:
+          path: helpers["common.labels"]["helm.sh/chart"]
+          value: common-test-2.3.4
+      - equal:
+          path: helpers["common.labels"]["app.kubernetes.io/name"]
+          value: common-test
+      - equal:
+          path: helpers["common.labels"]["app.kubernetes.io/instance"]
+          value: foo
+      - equal:
+          path: helpers["common.labels"]["app.kubernetes.io/version"]
+          value: 3.4.5
+      - equal:
+          path: helpers["common.labels"]["app.kubernetes.io/managed-by"]
+          value: Helm

@@ -2,4 +2,8 @@
 .DS_Store
 
 # dependencies
-/helm-chart-sources/*/charts/*.tgz
+/helm-chart-sources/**/charts/*.tgz
+
+/.debug/
+
+*.swp

@@ -69,12 +69,20 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 # -----------------------------------------------------------------------------
-# `common.serviceAccountName` returns the name of the service account to use.
+# `common.serviceAccountName` returns the name of the ServiceAccount to use.
+#
+# If the ServiceAccount is not created, the default is "default".
+#
+# If the ServiceAccount is created, the name is the value of the
+# `serviceAccount.name` value.
+#
+# If the ServiceAccount is created and the `serviceAccount.name` value is not
+# set, the name is the value of the `common.fullname` value.
 # -----------------------------------------------------------------------------
 {{- define "common.serviceAccountName" -}}
-  {{- if .Values.serviceAccount.create }}
+  {{- if (.Values.serviceAccount).create }}
     {{- default (include "common.fullname" .) .Values.serviceAccount.name }}
   {{- else }}
-    {{- default "default" .Values.serviceAccount.name }}
+    {{- default "default" (.Values.serviceAccount).name }}
   {{- end }}
 {{- end }}

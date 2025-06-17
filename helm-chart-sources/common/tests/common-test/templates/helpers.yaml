@@ -1,0 +1,8 @@
+---
+helpers:
+  "common.name": {{ include "common.name" . | quote }}
+  "common.fullname": {{ include "common.fullname" . | quote }}
+  "common.chart": {{ include "common.chart" . | quote }}
+  "common.serviceAccountName": {{ include "common.serviceAccountName" . | quote }}
+  "common.labels": {{ include "common.labels" . | nindent 4 }}
+  "common.selectorLabels": {{ include "common.selectorLabels" . | nindent 4 }}

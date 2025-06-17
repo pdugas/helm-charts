@@ -1,7 +1,8 @@
 image:
   repository: cribl/cribl
   pullPolicy: IfNotPresent
-  tag: 4.10.1
+  # defaults to the chart's appVersion
+  tag:
 
 imagePullSecrets: []
 nameOverride: ""
@@ -124,6 +125,8 @@ rbac:
   rules: []
   extraRules: []
 
+labels: {} # for the Deployment object
+
 podLabels: {}
 
 podAnnotations: {}
@@ -154,8 +157,8 @@ service:
   externalTrafficPolicy: Local
   annotations: {}
   ports:
-    - port: 4200
-      targetPort: 4200
+    - name: dist-mgmt
+      port: 4200
       protocol: TCP
 
 ingress:

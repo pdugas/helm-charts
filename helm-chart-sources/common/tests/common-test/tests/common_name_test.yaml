@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: common.name
+templates:
+  - helpers.yaml
+tests:
+  - it: defaults to the chart name
+    asserts:
+      - equal:
+          path: helpers["common.name"]
+          value: common-test
+  - it: can be overridden with nameOverride
+    set:
+      nameOverride: foo
+    asserts:
+      - equal:
+          path: helpers["common.name"]
+          value: foo

@@ -1,2 +1,1 @@
 {{ include "common.extras" . }}
-{{ include "common.secret" . }}

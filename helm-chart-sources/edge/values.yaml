@@ -294,4 +294,4 @@ extraLabels: {}
 
 # Pods get 30s by default for orderly shutdown before they're killed but may
 # need a little more time in various scenarios. Set this to allow more time.
-# terminationGracePeriodSeconds: 60s
+terminationGracePeriodSeconds:

@@ -1,8 +1,8 @@
 # outpost.pod is a helper template that is used to generate the pod spec for the
 # Outpost instance. It is used by the Deployment template.
 {{- define "outpost.pod" -}}
-{{- if .Values.serviceAccount.automountServiceAccountToken }}
-serviceAccountName: {{ if not .Values.serviceAccount.name }}{{ include "common.fullname" . }}{{ else }}{{ .Values.serviceAccount.name }}{{ end }}
+{{- if (.Values.serviceAccount).automountServiceAccountToken }}
+serviceAccountName: {{ if not (.Values.serviceAccount).name }}{{ include "common.fullname" . }}{{ else }}{{ (.Values.serviceAccount).name }}{{ end }}
 {{- end }}
 {{- with .Values.podSecurityContext }}
 securityContext: {{- toYaml . | nindent 2 }}
@@ -19,7 +19,7 @@ nodeSelector: {{- toYaml . | nindent 2 }}
 {{- with .Values.tolerations }}
 tolerations: {{- toYaml . | nindent 2 }}
 {{- end }}
-{{- if or .Values.extraVolumeMounts .Values.extraConfigmapMounts .Values.extraSecretMounts }}
+{{- if or .Values.extraVolumeMounts .Values.extraConfigMaps .Values.extraSecretMounts }}
 volumes:
   {{- range .Values.extraVolumeMounts }}
   - name: {{ .name }}
