@@ -1,0 +1,186 @@
+image:
+  repository: cribl/cribl
+  pullPolicy: IfNotPresent
+  # defaults to the chart's appVersion
+  tag:
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+replicaCount: 1
+strategy:
+  type: Recreate
+  rollingUpdate:
+    maxSurge:
+    maxUnavailable:
+
+env:
+  CRIBL_DIST_MODE: outpost
+
+envValueFrom:
+  # This informs Outpost which Pod it's running in. It is needed for the
+  # instance to identify the local K8s runtime environment and report it to the
+  # upstream Cribl Leader for use in mappings.
+  - name: CRIBL_K8S_POD
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name
+  # This informs Outpost of the CPU resource limits for the Pod. This is used to
+  # control the number of connection-handler instances get spawned.
+  - name: CRIBL_K8S_CPU_LIMIT
+    valueFrom:
+      resourceFieldRef:
+        resource: limits.cpu
+        divisor: 1m
+
+extraEnv: {}
+extraEnvFrom: []
+extraConfigMaps: []
+extraSecretMounts: []
+extraVolumeMounts: []
+extraContainers: []
+extraInitContainers: []
+
+cribl:
+  # Set `leader` to the URL to use for the `CRIBL_DIST_LEADER_URL` environment
+  # variable in the Outpost Pod(s). Set `existingSecretForLeader` instead if
+  # there is an existing Secret to use instead. Either `leader` or
+  # `existingSecretForLeader` is required.
+  leader:
+  # Set `existingSecretForLeader` to the name of an existing Secret that
+  # contains a `CRIBL_DIST_LEADER_URL` key that should be used for the
+  # corresponding environment variable in the Outpost Pod(s). If not set, the
+  # `leader` value must be set to the URL to use and it will be added as a key
+  # there and used to set the environment variable.
+  existingSecretForLeader:
+
+  # Set `config` to a map of config files to create on startup.
+  #
+  # Keys in the object are paths (relative to CRIBL_HOME) for files to create.
+  # Values are the YAML data to be stored in the files.
+  #
+  # These are securely stored in a Secret and rendered to the `CRIBL_BOOTSTRAP`
+  # environment variable in the Pod(s). On startup, Cribl writes these values to
+  # the corresponding files.
+  #
+  # If `existingSecretForConfig` is set, `config` is ignored.
+  #
+  # example:
+  #   config:
+  #     cribl/some-config.yml:
+  #       foo: bar
+  #     cribl/some-other-config.yml:
+  #       foo: bar
+  #     ...
+  config:
+  # Set `existingSecretForConfig` to the name of an existing Secret that
+  # contains a `CRIBL_BOOTSTRAP` key that should be used for the corresponding
+  # environment variable in the Outpost Pod(s).
+  existingSecretForConfig:
+
+  home: /opt/cribl
+
+  readinessProbe:
+    httpGet:
+      path: /api/v1/health
+      port: 4200
+      scheme: HTTP
+    initialDelaySeconds: 15
+    timeoutSeconds: 1
+  livenessProbe:
+    httpGet:
+      path: /api/v1/health
+      port: 4200
+      scheme: HTTP
+    initialDelaySeconds: 15
+    timeoutSeconds: 1
+
+serviceAccount:
+  create: false
+  annotations: {}
+  name: ""
+  automountServiceAccountToken: true
+
+rbac:
+  create: false
+  annotations: {}
+
+  # namespace-scoped resources
+  roleRules:
+    - apiGroups:
+        - ""
+      resources:
+        - pods
+      verbs: ['get']
+    - apiGroups:
+        - "apps"
+      resources:
+        - deployments
+      verbs:
+        - get
+  extraRoleRules: []
+
+  # cluster-scoped resources
+  rules: []
+  extraRules: []
+
+labels: {} # for the Deployment object
+
+podLabels: {}
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # privileged: true
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+priorityClassName: ""
+
+service:
+  # use `ClusterIP` for internal access to Cribl Outpost (i.e. from other Pods
+  # in the Cluster) or `LoadBalancer` to _also_ support external access. This
+  # could also be set to `NodePort` but that should only be used for testing.
+  type: ClusterIP
+  # `loadBalancerIP` is only used if `type` is `LoadBalancer`.
+  loadBalancerIP: 10.10.10.10
+  # `externalTrafficPolicy` is only used if `type` is `LoadBalancer` or
+  # `NodePort`.
+  externalTrafficPolicy: Local
+  annotations: {}
+  ports:
+    - name: dist-mgmt
+      port: 4200
+      protocol: TCP
+
+ingress:
+  enable: false
+  className: ""
+
+resources:
+  limits:
+   cpu: 4
+   memory: 8192Mi
+   ephemeral-storage: 10Gi
+  requests:
+   cpu: 2
+   memory: 4096Mi
+
+nodeSelector: {}
+tolerations: {}
+
+extraObjects: {}
+
+extraLabels: {}
+
+# Pods get 30s by default for orderly shutdown before they're killed but may
+# need a little more time in various scenarios. Set this to allow more time.
+terminationGracePeriodSeconds:

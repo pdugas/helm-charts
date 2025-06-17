@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: common.fullname
+templates:
+  - helpers.yaml
+tests:
+  - it: defaults to the release name
+    asserts:
+      - equal:
+          path: helpers["common.fullname"]
+          value: RELEASE-NAME-common-test
+  - it: can be overridden with fullnameOverride
+    set:
+      fullnameOverride: foo
+    asserts:
+      - equal:
+          path: helpers["common.fullname"]
+          value: foo
+  - it: prefixes with release name when nameOverride set
+    set:
+      nameOverride: foo
+    asserts:
+      - equal:
+          path: helpers["common.fullname"]
+          value: RELEASE-NAME-foo
+  - it: only uses fullnameOverride when nameOverride is also set
+    set:
+      nameOverride: foo
+      fullnameOverride: bar
+    asserts:
+      - equal:
+          path: helpers["common.fullname"]
+          value: bar

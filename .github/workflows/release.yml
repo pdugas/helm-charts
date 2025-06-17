@@ -25,6 +25,11 @@ jobs:
         with:
           version: 3.12.3
 
+      - name: helm dependencies
+        run: |
+          helm dependency build helm-chart-sources/common/tests/common-test
+          helm dependency build helm-chart-sources/outpost
+
       - name: helm lint
         run: helm lint helm-chart-sources/*
 

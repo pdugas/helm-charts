@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "common.fullname" . }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+  {{- with .Values.podAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "common.selectorLabels" . | nindent 6 }}
+  {{- $strategy := default "Recreate" .Values.strategy.type }}
+  {{- if and (ne $strategy "Recreate") (ne $strategy "RollingUpdate") }}
+    {{- fail (printf "Not a valid strategy type for Deployment (%s)" $strategy) }}
+  {{- end }}
+  strategy:
+    type: {{ $strategy }}
+    {{- with .Values.strategy.rollingUpdate }}
+      {{- if and (eq $strategy "RollingUpdate") (or .surge .unavailable) }}
+    rollingUpdate:
+        {{- with .unavailable }}
+      maxUnavailable: {{ . }}
+        {{- end }}
+        {{- with .surge }}
+      maxSurge: {{ . }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "common.selectorLabels" . | nindent 8 }}
+    spec: {{- include "outpost.pod" . | nindent 6 }}

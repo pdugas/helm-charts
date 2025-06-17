@@ -1,39 +1,53 @@
-{{/* vim: set filetype=mustache: */}}
-{{/*
-Expand the name of the chart.
-*/}}
+# -----------------------------------------------------------------------------
+# `common.name` returns the name from the Chart's `Chart.yaml` file.
+#
+# Users can optionally override this by setting `nameOverride`.
+# -----------------------------------------------------------------------------
 {{- define "common.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+  {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{/*
-Create a default fully qualified app name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-If release name contains chart name it will be used as a full name.
-*/}}
+# -----------------------------------------------------------------------------
+# `common.fullname` returns a default fully qualified app name.
+#
+# Users can optionally override this by setting `fullnameOverride`.
+#
+# We truncate at 63 chars because some Kubernetes name fields are limited to
+# this (by the DNS naming spec). 
+#
+# If release name contains chart name it will be used as the full name.
+# -----------------------------------------------------------------------------
 {{- define "common.fullname" -}}
-{{- if .Values.fullnameOverride }}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- $name := default .Chart.Name .Values.nameOverride }}
-{{- if contains $name .Release.Name }}
-{{- .Release.Name | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
-{{- end }}
-{{- end }}
+  {{- if .Values.fullnameOverride }}
+    {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+  {{- else }}
+    {{- $name := default .Chart.Name .Values.nameOverride }}
+    {{- if contains $name .Release.Name }}
+      {{- .Release.Name | trunc 63 | trimSuffix "-" }}
+    {{- else }}
+      {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+    {{- end }}
+  {{- end }}
 {{- end }}
 
-{{/*
-Create chart name and version as used by the chart label.
-*/}}
+# -----------------------------------------------------------------------------
+# `common.chart` is the Chart's name and version concatenated with a hyphen.
+#
+# This is commonly used as a label.
+#
+# Example: `mychart-1.2.3`
+# -----------------------------------------------------------------------------
 {{- define "common.chart" -}}
-{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+  {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{/*
-Common labels
-*/}}
+# -----------------------------------------------------------------------------
+# `common.labels` returns a set of labels that are commonly used for objects
+# created by our charts.
+#
+# This includes the Chart's name and version, the App's version, and the
+# release service.
+# -----------------------------------------------------------------------------
 {{- define "common.labels" -}}
 helm.sh/chart: {{ include "common.chart" . }}
 {{ include "common.selectorLabels" . }}
@@ -43,21 +57,32 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
-{{/*
-Selector labels
-*/}}
+# -----------------------------------------------------------------------------
+# `common.selectorLabels` returns a set of labels that are commonly used for
+# objects created by our charts that need to be picked using a selector.
+#
+# This includes the App's name and instance.
+# -----------------------------------------------------------------------------
 {{- define "common.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "common.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
-{{/*
-Create the name of the service account to use
-*/}}
+# -----------------------------------------------------------------------------
+# `common.serviceAccountName` returns the name of the ServiceAccount to use.
+#
+# If the ServiceAccount is not created, the default is "default".
+#
+# If the ServiceAccount is created, the name is the value of the
+# `serviceAccount.name` value.
+#
+# If the ServiceAccount is created and the `serviceAccount.name` value is not
+# set, the name is the value of the `common.fullname` value.
+# -----------------------------------------------------------------------------
 {{- define "common.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "common.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end }}
+  {{- if (.Values.serviceAccount).create }}
+    {{- default (include "common.fullname" .) .Values.serviceAccount.name }}
+  {{- else }}
+    {{- default "default" (.Values.serviceAccount).name }}
+  {{- end }}
 {{- end }}

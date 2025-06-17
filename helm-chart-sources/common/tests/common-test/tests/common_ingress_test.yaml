@@ -1,0 +1,72 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: common.ingress
+templates:
+  - ingress.yaml
+tests:
+  - it: emits nothing when not enabled
+    set:
+      ingress:
+        enable: false
+        ingress:
+          - name: test
+            rules:
+              - host: test.example.com
+                paths:
+                  - path: /
+                    pathType: Prefix
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: emits nothing when enabled but no ingress is defined
+    set:
+      ingress:
+        enable: true
+        ingress: []
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: emits an Ingress for each ingress defined
+    set:
+      ingress:
+        enable: true
+        ingress:
+          - name: ingress-0
+            rules:
+              - host: foo.example.com
+                paths:
+                  - path: /foo
+                    pathType: Prefix
+                    port: 80
+          - name: ingress-1
+            rules:
+              - host: bar.example.com
+                paths:
+                  - path: /bar
+                    pathType: Prefix
+                    port: 8080
+    documentIndex: 0
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isAPIVersion:
+          of: networking.k8s.io/v1
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-common-test-ingress-0
+      - equal:
+          path: spec.rules[0].host
+          value: foo.example.com
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /foo
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: Prefix
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: RELEASE-NAME-common-test
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 80

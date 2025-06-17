@@ -1,0 +1,11 @@
+apiVersion: v2
+name: common-test
+description: Test Chart
+type: application
+version: 4.12.1
+appVersion: 4.12.1
+
+dependencies:
+  - name: common
+    version: 4.12.1
+    repository: file://../../../common

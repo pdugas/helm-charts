@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: common.chart
+templates:
+  - helpers.yaml
+tests:
+  - it: concatenates chart name and version
+    chart:
+      version: 1.2.3
+    asserts:
+      - equal:
+          path: helpers["common.chart"]
+          value: common-test-1.2.3
